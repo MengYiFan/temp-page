@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏 - 网络诊断</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .status {
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .success {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: #2c5282;
+        }
+        .error {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            color: #d63031;
+        }
+        .tips {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        .tips h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .tips ul {
+            color: #6c757d;
+            line-height: 1.8;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin: 10px;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 五子棋游戏诊断</h1>
+        
+        <div id="status" class="status">
+            正在检测网络连接...
+        </div>
+        
+        <div id="details" style="display: none;">
+            <p><strong>服务器状态：</strong> <span id="server-status">检测中...</span></p>
+            <p><strong>端口状态：</strong> <span id="port-status">检测中...</span></p>
+            <p><strong>浏览器信息：</strong> <span id="browser-info">检测中...</span></p>
+        </div>
+        
+        <div style="margin: 30px 0;">
+            <button class="test-button" onclick="testConnection()">重新检测连接</button>
+            <button class="test-button" onclick="openGame()">打开游戏</button>
+        </div>
+        
+        <div class="tips">
+            <h3>🔧 常见问题解决方案：</h3>
+            <ul>
+                <li><strong>防火墙问题：</strong>检查Windows防火墙是否阻止了本地访问</li>
+                <li><strong>端口占用：</strong>尝试使用不同的端口号（8080, 3000, 5173等）</li>
+                <li><strong>浏览器缓存：</strong>按 Ctrl+F5 强制刷新页面</li>
+                <li><strong>代理设置：</strong>检查是否启用了代理服务器</li>
+                <li><strong>杀毒软件：</strong>临时关闭杀毒软件测试</li>
+                <li><strong>hosts文件：</strong>检查C:\Windows\System32\drivers\etc\hosts文件</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 15px;">
+            <h4>🌐 备用访问地址：</h4>
+            <p><a href="http://localhost:8080" target="_blank">http://localhost:8080</a></p>
+            <p><a href="http://127.0.0.1:8080" target="_blank">http://127.0.0.1:8080</a></p>
+            <p><a href="http://localhost:5175" target="_blank">http://localhost:5175</a></p>
+            <p><a href="http://127.0.0.1:5175" target="_blank">http://127.0.0.1:5175</a></p>
+        </div>
+    </div>
+
+    <script>
+        function testConnection() {
+            const statusEl = document.getElementById('status');
+            const detailsEl = document.getElementById('details');
+            
+            statusEl.innerHTML = '<div class="loading"></div> 正在检测网络连接...';
+            statusEl.className = 'status';
+            detailsEl.style.display = 'none';
+            
+            // 检测浏览器信息
+            document.getElementById('browser-info').textContent = navigator.userAgent;
+            
+            // 检测服务器状态
+            const urls = [
+                'http://localhost:8080',
+                'http://127.0.0.1:8080', 
+                'http://localhost:5175',
+                'http://127.0.0.1:5175'
+            ];
+            
+            let checked = 0;
+            let availableServers = [];
+            
+            urls.forEach(url => {
+                fetch(url, { method: 'HEAD', mode: 'no-cors' })
+                    .then(() => {
+                        availableServers.push(url);
+                        checked++;
+                        if (checked === urls.length) {
+                            showResults(availableServers);
+                        }
+                    })
+                    .catch(() => {
+                        checked++;
+                        if (checked === urls.length) {
+                            showResults(availableServers);
+                        }
+                    });
+            });
+        }
+        
+        function showResults(availableServers) {
+            const statusEl = document.getElementById('status');
+            const detailsEl = document.getElementById('details');
+            const serverStatus = document.getElementById('server-status');
+            const portStatus = document.getElementById('port-status');
+            
+            if (availableServers.length > 0) {
+                statusEl.innerHTML = '🎉 服务器正常运行！';
+                statusEl.className = 'status success';
+                serverStatus.textContent = '运行中 ✓';
+                serverStatus.style.color = '#28a745';
+                portStatus.textContent = availableServers.join(', ');
+                portStatus.style.color = '#28a745';
+            } else {
+                statusEl.innerHTML = '❌ 无法连接到服务器';
+                statusEl.className = 'status error';
+                serverStatus.textContent = '未响应 ✗';
+                serverStatus.style.color = '#dc3545';
+                portStatus.textContent = '所有端口都无法访问';
+                portStatus.style.color = '#dc3545';
+            }
+            
+            detailsEl.style.display = 'block';
+        }
+        
+        function openGame() {
+            // 尝试打开最有可能的地址
+            const urls = ['http://localhost:8080', 'http://localhost:5175'];
+            let opened = false;
+            
+            urls.forEach((url, index) => {
+                setTimeout(() => {
+                    if (!opened) {
+                        window.open(url, '_blank');
+                        opened = true;
+                    }
+                }, index * 1000);
+            });
+        }
+        
+        // 页面加载时自动检测
+        window.onload = function() {
+            setTimeout(testConnection, 1000);
+        };
+    </script>
+</body>
+</html>
